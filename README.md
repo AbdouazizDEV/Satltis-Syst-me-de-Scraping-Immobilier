@@ -119,6 +119,16 @@ tail -f storage/logs/laravel.log
 ### Erreur de base de données
 ➡️ Vérifiez que `database/database.sqlite` existe et que les migrations sont exécutées.
 
+### Erreur "could not find driver" (PostgreSQL)
+➡️ En développement local, utilisez SQLite (par défaut). Si vous voulez utiliser PostgreSQL :
+```bash
+# Ubuntu/Debian
+sudo apt-get install php-pgsql
+
+# Vérifier l'extension
+php -m | grep pgsql
+```
+
 ## 📊 Base de Données
 
 Table principale : `rental_sources`
