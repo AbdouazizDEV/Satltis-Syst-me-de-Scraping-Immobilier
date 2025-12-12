@@ -14,23 +14,26 @@ services:
         value: error
       - key: DB_CONNECTION
         value: postgresql
-      # Ajoutez vos variables d'environnement Render ici
-      # - key: DB_HOST
-      #   fromDatabase:
-      #     name: satltis-db
-      #     property: host
-      # - key: DB_DATABASE
-      #   fromDatabase:
-      #     name: satltis-db
-      #     property: database
-      # - key: DB_USERNAME
-      #   fromDatabase:
-      #     name: satltis-db
-      #     property: user
-      # - key: DB_PASSWORD
-      #   fromDatabase:
-      #     name: satltis-db
-      #     property: password
+      - key: DB_HOST
+        fromDatabase:
+          name: satltis-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: satltis-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: satltis-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: satltis-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: satltis-db
+          property: password
 
 databases:
   - name: satltis-db

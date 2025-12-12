@@ -15,6 +15,13 @@ fi
 if [ "$DB_CONNECTION" = "sqlite" ] && [ ! -f database/database.sqlite ]; then
     touch database/database.sqlite
     chmod 664 database/database.sqlite
+    chown www-data:www-data database/database.sqlite
+fi
+
+# S'assurer que le fichier SQLite existe et a les bonnes permissions
+if [ "$DB_CONNECTION" = "sqlite" ] && [ -f database/database.sqlite ]; then
+    chmod 664 database/database.sqlite
+    chown www-data:www-data database/database.sqlite
 fi
 
 # Exécuter les migrations (seulement si pas déjà fait)
