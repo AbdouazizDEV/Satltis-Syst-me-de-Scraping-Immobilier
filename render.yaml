@@ -1,9 +1,8 @@
 services:
   - type: web
     name: satltis-scraping
-    env: php
-    buildCommand: composer install --optimize-autoloader --no-dev && php artisan optimize && php artisan migrate --force
-    startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     envVars:
       - key: APP_ENV
         value: production
@@ -13,4 +12,29 @@ services:
         value: stderr
       - key: LOG_LEVEL
         value: error
+      - key: DB_CONNECTION
+        value: postgresql
+      # Ajoutez vos variables d'environnement Render ici
+      # - key: DB_HOST
+      #   fromDatabase:
+      #     name: satltis-db
+      #     property: host
+      # - key: DB_DATABASE
+      #   fromDatabase:
+      #     name: satltis-db
+      #     property: database
+      # - key: DB_USERNAME
+      #   fromDatabase:
+      #     name: satltis-db
+      #     property: user
+      # - key: DB_PASSWORD
+      #   fromDatabase:
+      #     name: satltis-db
+      #     property: password
+
+databases:
+  - name: satltis-db
+    databaseName: satltis
+    user: satltis_user
+    plan: free
 

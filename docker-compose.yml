@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: satltis-app
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - DB_CONNECTION=sqlite
+    volumes:
+      - ./storage:/var/www/html/storage
+      - ./database:/var/www/html/database
+    networks:
+      - satltis-network
+
+  # Optionnel : Base de données MySQL pour développement
+  # mysql:
+  #   image: mysql:8.0
+  #   container_name: satltis-mysql
+  #   restart: unless-stopped
+  #   environment:
+  #     MYSQL_DATABASE: satltis
+  #     MYSQL_ROOT_PASSWORD: root
+  #     MYSQL_PASSWORD: root
+  #   ports:
+  #     - "3306:3306"
+  #   volumes:
+  #     - mysql_data:/var/lib/mysql
+  #   networks:
+  #     - satltis-network
+
+networks:
+  satltis-network:
+    driver: bridge
+
+# volumes:
+#   mysql_data:
+

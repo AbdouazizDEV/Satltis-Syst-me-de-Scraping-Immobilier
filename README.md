@@ -134,12 +134,51 @@ Champs :
 - `district`
 - `is_qualified` (calculé automatiquement)
 
+## 🐳 Docker
+
+### Développement local avec Docker
+
+```bash
+# Construire et démarrer les conteneurs
+docker-compose up -d
+
+# Voir les logs
+docker-compose logs -f
+
+# Arrêter les conteneurs
+docker-compose down
+
+# Reconstruire l'image
+docker-compose build --no-cache
+```
+
+L'application sera accessible sur `http://localhost:8000`
+
+### Tester l'image Docker
+
+```bash
+# Construire l'image
+docker build -t satltis-app .
+
+# Lancer le conteneur
+docker run -p 8000:80 satltis-app
+```
+
 ## 🚢 Déploiement
 
 Le projet est prêt pour déploiement sur :
-- **Railway** : Utilise le `Procfile`
-- **Render** : Utilise le `render.yaml`
+- **Render** : Utilise Docker (voir `render.yaml`)
+- **Railway** : Utilise le `Procfile` ou Docker
 - **Heroku** : Utilise le `Procfile`
+
+### Déploiement sur Render avec Docker
+
+1. Connectez votre repo GitHub à Render
+2. Créez un nouveau "Web Service"
+3. Sélectionnez votre repo
+4. Render détectera automatiquement le `Dockerfile`
+5. Ajoutez une base de données PostgreSQL
+6. Configurez les variables d'environnement
 
 Voir `DEPLOYMENT.md` pour les détails.
 
