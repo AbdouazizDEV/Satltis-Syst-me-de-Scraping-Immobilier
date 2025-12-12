@@ -70,10 +70,17 @@ php artisan migrate --force || true
 
 # Optimiser l'application pour la production
 if [ "$APP_ENV" = "production" ]; then
+    # Nettoyer à nouveau le cache après configuration PostgreSQL
+    php artisan config:clear || true
+    
     # Recréer le cache avec les nouvelles valeurs
     php artisan config:cache || true
     php artisan route:cache || true
     php artisan view:cache || true
+    
+    # Vérifier quelle base de données est utilisée
+    echo "=== Vérification de la configuration de la base de données ==="
+    php artisan tinker --execute="echo 'DB_CONNECTION: ' . config('database.default') . PHP_EOL;" 2>/dev/null || echo "Note: Impossible de vérifier la config via tinker"
 fi
 
 # Démarrer Apache
