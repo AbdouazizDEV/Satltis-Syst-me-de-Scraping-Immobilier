@@ -11,14 +11,22 @@ if ! grep -q "APP_KEY=base64:" .env 2>/dev/null; then
     php artisan key:generate --force || true
 fi
 
-# Créer le fichier SQLite si nécessaire
+# Forcer PostgreSQL si DB_CONNECTION n'est pas défini (production Render)
+if ! grep -q "DB_CONNECTION=" .env 2>/dev/null || [ -z "$DB_CONNECTION" ]; then
+    if [ -n "$DB_HOST" ]; then
+        # Si DB_HOST est défini (via Render), utiliser PostgreSQL
+        sed -i 's/DB_CONNECTION=.*/DB_CONNECTION=pgsql/' .env || echo "DB_CONNECTION=pgsql" >> .env
+    fi
+fi
+
+# Créer le fichier SQLite seulement si explicitement demandé (développement local)
 if [ "$DB_CONNECTION" = "sqlite" ] && [ ! -f database/database.sqlite ]; then
     touch database/database.sqlite
     chmod 664 database/database.sqlite
     chown www-data:www-data database/database.sqlite
 fi
 
-# S'assurer que le fichier SQLite existe et a les bonnes permissions
+# S'assurer que le fichier SQLite existe et a les bonnes permissions (si utilisé)
 if [ "$DB_CONNECTION" = "sqlite" ] && [ -f database/database.sqlite ]; then
     chmod 664 database/database.sqlite
     chown www-data:www-data database/database.sqlite
