@@ -16,7 +16,8 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'sqlite'),
+    // Détecter automatiquement PostgreSQL si DB_HOST est défini (production)
+    'default' => env('DB_HOST') ? (env('DB_CONNECTION', 'pgsql')) : env('DB_CONNECTION', 'sqlite'),
 
     /*
     |--------------------------------------------------------------------------

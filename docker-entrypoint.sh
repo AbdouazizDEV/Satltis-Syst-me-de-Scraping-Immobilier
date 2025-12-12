@@ -13,9 +13,17 @@ touch /var/www/html/storage/logs/laravel.log 2>/dev/null || true
 chown www-data:www-data /var/www/html/storage/logs/laravel.log 2>/dev/null || true
 chmod 664 /var/www/html/storage/logs/laravel.log 2>/dev/null || true
 
+# Supprimer complètement les fichiers de cache (plus agressif)
+rm -rf /var/www/html/bootstrap/cache/config.php 2>/dev/null || true
+rm -rf /var/www/html/bootstrap/cache/routes*.php 2>/dev/null || true
+rm -rf /var/www/html/bootstrap/cache/services.php 2>/dev/null || true
+rm -rf /var/www/html/storage/framework/cache/data/* 2>/dev/null || true
+
 # Nettoyer le cache AVANT toute configuration (important!)
 php artisan config:clear || true
 php artisan cache:clear || true
+php artisan route:clear || true
+php artisan view:clear || true
 
 # Générer la clé d'application si elle n'existe pas
 if ! grep -q "APP_KEY=base64:" .env 2>/dev/null; then
@@ -82,15 +90,21 @@ php artisan migrate --force || true
 if [ "$APP_ENV" = "production" ]; then
     # Nettoyer à nouveau le cache après configuration PostgreSQL
     php artisan config:clear || true
+    php artisan cache:clear || true
+    php artisan route:clear || true
+    php artisan view:clear || true
     
-    # Recréer le cache avec les nouvelles valeurs
+    # Supprimer à nouveau les fichiers de cache
+    rm -rf /var/www/html/bootstrap/cache/config.php 2>/dev/null || true
+    
+    # Recréer le cache avec les nouvelles valeurs (sans cache pour forcer la lecture de .env)
     php artisan config:cache || true
     php artisan route:cache || true
     php artisan view:cache || true
     
     # Vérifier quelle base de données est utilisée
     echo "=== Vérification de la configuration de la base de données ==="
-    php artisan tinker --execute="echo 'DB_CONNECTION: ' . config('database.default') . PHP_EOL;" 2>/dev/null || echo "Note: Impossible de vérifier la config via tinker"
+    php artisan tinker --execute="echo 'DB_CONNECTION: ' . config('database.default') . PHP_EOL; echo 'DB_HOST: ' . env('DB_HOST', 'non défini') . PHP_EOL;" 2>/dev/null || echo "Note: Impossible de vérifier la config via tinker"
 fi
 
 # Démarrer Apache
