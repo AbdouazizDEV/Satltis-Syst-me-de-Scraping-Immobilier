@@ -22,9 +22,10 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Activer le module rewrite d'Apache
 RUN a2enmod rewrite
 
-# Copier les fichiers de configuration
-COPY .htaccess /var/www/html/.htaccess
-COPY public/.htaccess /var/www/html/public/.htaccess
+# Configurer Apache pour utiliser le dossier public comme DocumentRoot
+RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
+RUN sed -i 's|<Directory /var/www/html>|<Directory /var/www/html/public>|g' /etc/apache2/sites-available/000-default.conf
+RUN sed -i 's|AllowOverride None|AllowOverride All|g' /etc/apache2/sites-available/000-default.conf
 
 # Copier les fichiers de l'application
 COPY . /var/www/html
