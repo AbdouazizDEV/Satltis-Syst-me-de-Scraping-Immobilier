@@ -36,8 +36,13 @@ RUN composer install --optimize-autoloader --no-dev --no-interaction
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html \
     && chmod -R 775 /var/www/html/storage \
+    && chmod -R 775 /var/www/html/storage/logs \
+    && chmod -R 775 /var/www/html/storage/framework \
     && chmod -R 775 /var/www/html/bootstrap/cache \
-    && chmod -R 775 /var/www/html/database
+    && chmod -R 775 /var/www/html/database \
+    && touch /var/www/html/storage/logs/laravel.log \
+    && chown www-data:www-data /var/www/html/storage/logs/laravel.log \
+    && chmod 664 /var/www/html/storage/logs/laravel.log
 
 # Exposer le port (Render utilisera le port défini dans $PORT)
 EXPOSE 80

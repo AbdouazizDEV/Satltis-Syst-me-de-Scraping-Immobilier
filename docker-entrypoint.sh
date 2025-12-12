@@ -6,6 +6,13 @@ if [ ! -f .env ]; then
     cp .env.example .env
 fi
 
+# S'assurer que les permissions sont correctes au démarrage
+chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache || true
+chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache || true
+touch /var/www/html/storage/logs/laravel.log 2>/dev/null || true
+chown www-data:www-data /var/www/html/storage/logs/laravel.log 2>/dev/null || true
+chmod 664 /var/www/html/storage/logs/laravel.log 2>/dev/null || true
+
 # Nettoyer le cache AVANT toute configuration (important!)
 php artisan config:clear || true
 php artisan cache:clear || true
@@ -17,7 +24,7 @@ fi
 
 # Forcer PostgreSQL si DB_HOST est défini (production Render/Neon)
 if [ -n "$DB_HOST" ]; then
-    echo "Configuration PostgreSQL détectée (DB_HOST=$DB_HOST)"
+    echo "=== Configuration PostgreSQL détectée (DB_HOST=$DB_HOST) ==="
     
     # Forcer PostgreSQL dans .env
     if grep -q "DB_CONNECTION=" .env 2>/dev/null; then
@@ -35,6 +42,8 @@ if [ -n "$DB_HOST" ]; then
     [ -n "$DB_SSLMODE" ] && (grep -q "DB_SSLMODE=" .env && sed -i "s|DB_SSLMODE=.*|DB_SSLMODE=$DB_SSLMODE|" .env || echo "DB_SSLMODE=$DB_SSLMODE" >> .env)
     
     echo "Configuration PostgreSQL appliquée dans .env"
+    echo "Vérification de la connexion PostgreSQL..."
+    php artisan db:show || echo "Note: db:show peut échouer, mais la connexion sera testée lors des migrations"
 else
     echo "Aucune configuration PostgreSQL détectée, utilisation de SQLite par défaut"
 fi
@@ -51,6 +60,10 @@ if [ "$DB_CONNECTION" = "sqlite" ] && [ -f database/database.sqlite ]; then
     chmod 664 database/database.sqlite
     chown www-data:www-data database/database.sqlite
 fi
+
+# S'assurer que les permissions sont correctes AVANT les migrations
+chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache || true
+chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache || true
 
 # Exécuter les migrations (seulement si pas déjà fait)
 php artisan migrate --force || true
