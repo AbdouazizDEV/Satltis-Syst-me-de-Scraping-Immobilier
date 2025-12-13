@@ -124,10 +124,29 @@ Accédez à : `https://votre-app.up.railway.app/rentals`
 
 ### Erreur : "There was an error deploying from source"
 
+**Causes possibles** :
+1. Railway n'a pas détecté le Dockerfile
+2. Erreur lors du build Docker
+3. Variables d'environnement manquantes
+
 **Solutions** :
-1. Vérifiez que le `Dockerfile` est présent dans le repo
-2. Vérifiez que les variables d'environnement sont correctement configurées
-3. Vérifiez les logs de build dans Railway
+1. **Vérifier que Railway utilise Docker** :
+   - Allez dans Settings → Build
+   - Vérifiez que "Dockerfile" est sélectionné comme builder
+   - Si ce n'est pas le cas, sélectionnez "Dockerfile" et redéployez
+
+2. **Vérifier les logs de build** :
+   - Allez dans l'onglet "Deployments"
+   - Cliquez sur le dernier déploiement
+   - Vérifiez les logs pour voir l'erreur exacte
+
+3. **Forcer l'utilisation de Docker** :
+   - Dans Settings → Build, sélectionnez "Dockerfile"
+   - Le fichier `railway.json` devrait automatiquement utiliser Docker
+
+4. **Vérifier que le Dockerfile est présent** :
+   - Le fichier `Dockerfile` doit être à la racine du repo
+   - Vérifiez dans GitHub que le fichier est bien présent
 
 ### Erreur : "Database connection failed"
 
