@@ -123,10 +123,33 @@ php artisan tinker --execute="echo config('database.default');"
 
 **Solution** : Si `DB_URL` contient des caractères spéciaux, utilisez les variables individuelles à la place
 
+## Problème : Table "sessions" n'existe pas
+
+### Erreur
+```
+SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation "sessions" does not exist
+```
+
+### Solution
+
+Cette erreur signifie que les migrations n'ont pas été exécutées correctement. Le script d'entrée devrait maintenant créer automatiquement la table `sessions` si elle manque.
+
+**Étapes** :
+1. Vérifiez les logs Render pour voir si les migrations ont été exécutées
+2. Cherchez dans les logs : `=== Exécution des migrations ===`
+3. Si vous voyez `✅ Migrations exécutées avec succès`, les migrations ont fonctionné
+4. Si vous voyez `❌ ERREUR lors de l'exécution des migrations`, il y a un problème de connexion
+
+**Solution manuelle** (si nécessaire) :
+1. Allez dans "Shell" de votre service Render
+2. Exécutez : `php artisan migrate --force`
+3. Vérifiez que la table existe : `php artisan tinker --execute="echo Schema::hasTable('sessions') ? 'OK' : 'MANQUANTE';"`
+
 ## Support
 
 Si le problème persiste après avoir suivi ces étapes :
 1. Vérifiez les logs complets dans Render
 2. Vérifiez que Neon PostgreSQL est accessible depuis Render
 3. Vérifiez que les migrations ont été exécutées avec succès
+4. Vérifiez que la table `sessions` existe dans votre base de données PostgreSQL
 
