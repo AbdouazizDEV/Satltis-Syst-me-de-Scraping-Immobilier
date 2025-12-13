@@ -19,10 +19,11 @@ rm -rf /var/www/html/storage/framework/cache/data/* 2>/dev/null || true
 rm -rf /var/www/html/storage/framework/views/*.php 2>/dev/null || true
 
 # Nettoyer le cache AVANT toute configuration (important!)
+# Ne pas utiliser cache:clear car la table cache n'existe peut-être pas encore
 php artisan config:clear || true
-php artisan cache:clear || true
 php artisan route:clear || true
 php artisan view:clear || true
+# Ne pas exécuter cache:clear ici - la table cache sera créée par les migrations
 
 # Générer la clé d'application si elle n'existe pas
 if ! grep -q "APP_KEY=base64:" .env 2>/dev/null; then
@@ -161,11 +162,12 @@ if (!Schema::hasTable('sessions')) {
 
 # Optimiser l'application pour la production
 if [ "$APP_ENV" = "production" ] || [ -n "$DB_HOST" ]; then
-    # Nettoyer à nouveau le cache APRÈS configuration PostgreSQL
+    # Nettoyer à nouveau le cache APRÈS configuration PostgreSQL et migrations
     php artisan config:clear || true
-    php artisan cache:clear || true
     php artisan route:clear || true
     php artisan view:clear || true
+    # Nettoyer le cache seulement APRÈS que les migrations aient créé la table cache
+    php artisan cache:clear || echo "Note: cache:clear peut échouer si la table cache n'existe pas encore"
     
     # Supprimer à nouveau TOUS les fichiers de cache
     rm -rf /var/www/html/bootstrap/cache/*.php 2>/dev/null || true
