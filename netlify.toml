@@ -1,0 +1,24 @@
+# ⚠️ ATTENTION IMPORTANTE ⚠️
+# 
+# Ce fichier est créé pour corriger l'erreur de configuration Netlify,
+# MAIS Netlify ne peut PAS exécuter des applications PHP/Laravel.
+#
+# Même avec cette configuration, votre application Laravel NE FONCTIONNERA PAS
+# car Netlify ne peut servir que des fichiers statiques (HTML/CSS/JS).
+#
+# ⚠️ RECOMMANDATION : Utilisez Render ou Railway à la place
+# - Render : Déjà configuré avec Docker (voir render.yaml)
+# - Railway : Déjà configuré (voir railway.json)
+#
+# Pour plus de détails, voir NETLIFY_NOTE.md
+
+[build]
+  # Pas de commande de build nécessaire pour servir des fichiers statiques
+  # Mais cela ne permettra PAS d'exécuter PHP
+  command = ""
+  publish = "public"
+
+# Cette configuration permettra à Netlify de servir le dossier public/,
+# mais les fichiers PHP ne seront PAS exécutés - ils seront téléchargés
+# comme des fichiers texte au lieu d'être interprétés par PHP.
+

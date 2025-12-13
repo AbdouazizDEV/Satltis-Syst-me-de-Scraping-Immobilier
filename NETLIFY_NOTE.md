@@ -1,5 +1,28 @@
 # ⚠️ Pourquoi Netlify ne fonctionne pas pour Laravel
 
+## ⚠️ MISE À JOUR IMPORTANTE
+
+Même si vous corrigez le répertoire de publication (`dist` → `public`), **Netlify ne pourra toujours PAS exécuter votre application Laravel**.
+
+### Pourquoi ?
+
+1. **Netlify sert des fichiers statiques** : Même si vous publiez le dossier `public/`, Netlify ne peut que servir des fichiers HTML/CSS/JS. Les fichiers PHP seront téléchargés comme du texte au lieu d'être exécutés.
+
+2. **Pas d'interpréteur PHP** : Netlify n'a pas de serveur PHP intégré. Il ne peut pas exécuter `index.php` ou `artisan`.
+
+3. **Pas de routing Laravel** : Laravel nécessite un serveur web (Apache/Nginx) avec PHP-FPM pour router les requêtes. Netlify ne peut pas faire cela.
+
+### Exemple concret
+
+Si vous accédez à `https://votre-site.netlify.app/rentals` :
+- ❌ Netlify essaiera de servir un fichier statique `rentals.html` (qui n'existe pas)
+- ❌ Même si vous avez `public/index.php`, Netlify ne l'exécutera pas
+- ❌ Les routes Laravel ne fonctionneront pas
+
+---
+
+## ⚠️ Pourquoi Netlify ne fonctionne pas pour Laravel
+
 ## Problème
 
 Netlify est conçu pour les **sites statiques** (HTML/CSS/JS) et les applications **frontend** (React, Vue, etc.), **PAS** pour les applications backend PHP/Laravel.
