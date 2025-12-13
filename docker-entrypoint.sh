@@ -46,6 +46,46 @@ if [ -n "$DB_URL" ] || [ -n "$DB_HOST" ]; then
         export DB_CONNECTION=pgsql
         export DB_URL="$DB_URL"
         
+        # Extraire les informations de DB_URL et les mettre dans les variables individuelles
+        # Format: postgresql://username:password@host:port/database?sslmode=require
+        DB_URL_CLEAN=$(echo "$DB_URL" | sed 's|postgresql://||' | sed 's|postgres://||')
+        DB_USER_PASS=$(echo "$DB_URL_CLEAN" | cut -d'@' -f1)
+        DB_HOST_PORT_DB=$(echo "$DB_URL_CLEAN" | cut -d'@' -f2)
+        
+        DB_USERNAME=$(echo "$DB_USER_PASS" | cut -d':' -f1)
+        DB_PASSWORD=$(echo "$DB_USER_PASS" | cut -d':' -f2)
+        DB_HOST_PORT=$(echo "$DB_HOST_PORT_DB" | cut -d'/' -f1)
+        DB_DATABASE=$(echo "$DB_HOST_PORT_DB" | cut -d'/' -f2 | cut -d'?' -f1)
+        DB_PORT=$(echo "$DB_HOST_PORT" | cut -d':' -f2)
+        DB_HOST=$(echo "$DB_HOST_PORT" | cut -d':' -f1)
+        
+        # Extraire sslmode si présent
+        if echo "$DB_URL" | grep -q "sslmode="; then
+            DB_SSLMODE=$(echo "$DB_URL" | sed 's/.*sslmode=\([^&]*\).*/\1/')
+        else
+            DB_SSLMODE="require"
+        fi
+        
+        # Si le port n'est pas dans l'URL, utiliser le port par défaut
+        if [ "$DB_PORT" = "$DB_HOST" ]; then
+            DB_PORT="5432"
+        fi
+        
+        echo "Informations extraites de DB_URL:"
+        echo "  DB_HOST: $DB_HOST"
+        echo "  DB_PORT: $DB_PORT"
+        echo "  DB_DATABASE: $DB_DATABASE"
+        echo "  DB_USERNAME: $DB_USERNAME"
+        echo "  DB_SSLMODE: $DB_SSLMODE"
+        
+        # Exporter les variables extraites
+        export DB_HOST="$DB_HOST"
+        export DB_PORT="$DB_PORT"
+        export DB_DATABASE="$DB_DATABASE"
+        export DB_USERNAME="$DB_USERNAME"
+        export DB_PASSWORD="$DB_PASSWORD"
+        export DB_SSLMODE="$DB_SSLMODE"
+        
         # Forcer PostgreSQL dans .env (CRITIQUE: avant de créer le cache)
         if grep -q "DB_CONNECTION=" .env 2>/dev/null; then
             sed -i 's/DB_CONNECTION=.*/DB_CONNECTION=pgsql/' .env
@@ -60,7 +100,15 @@ if [ -n "$DB_URL" ] || [ -n "$DB_HOST" ]; then
             echo "DB_URL=$DB_URL" >> .env
         fi
         
-        echo "DB_URL configuré dans .env"
+        # Ajouter les variables individuelles dans .env (pour que Laravel les utilise)
+        [ -n "$DB_HOST" ] && (grep -q "DB_HOST=" .env && sed -i "s|DB_HOST=.*|DB_HOST=$DB_HOST|" .env || echo "DB_HOST=$DB_HOST" >> .env)
+        [ -n "$DB_DATABASE" ] && (grep -q "DB_DATABASE=" .env && sed -i "s|DB_DATABASE=.*|DB_DATABASE=$DB_DATABASE|" .env || echo "DB_DATABASE=$DB_DATABASE" >> .env)
+        [ -n "$DB_USERNAME" ] && (grep -q "DB_USERNAME=" .env && sed -i "s|DB_USERNAME=.*|DB_USERNAME=$DB_USERNAME|" .env || echo "DB_USERNAME=$DB_USERNAME" >> .env)
+        [ -n "$DB_PASSWORD" ] && (grep -q "DB_PASSWORD=" .env && sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=$DB_PASSWORD|" .env || echo "DB_PASSWORD=$DB_PASSWORD" >> .env)
+        [ -n "$DB_PORT" ] && (grep -q "DB_PORT=" .env && sed -i "s|DB_PORT=.*|DB_PORT=$DB_PORT|" .env || echo "DB_PORT=$DB_PORT" >> .env)
+        [ -n "$DB_SSLMODE" ] && (grep -q "DB_SSLMODE=" .env && sed -i "s|DB_SSLMODE=.*|DB_SSLMODE=$DB_SSLMODE|" .env || echo "DB_SSLMODE=$DB_SSLMODE" >> .env)
+        
+        echo "DB_URL et variables individuelles configurées dans .env"
     else
         echo "=== Configuration PostgreSQL détectée (DB_HOST=$DB_HOST) ==="
         
