@@ -47,10 +47,13 @@ RUN chown -R www-data:www-data /var/www/html \
     && chown www-data:www-data /var/www/html/storage/logs/laravel.log \
     && chmod 664 /var/www/html/storage/logs/laravel.log
 
-# Exposer le port (Render utilisera le port défini dans $PORT)
+# Exposer le port (Railway utilise $PORT, Render utilise 80)
+# On expose les deux pour compatibilité
 EXPOSE 80
+EXPOSE 8080
 
-# Configurer Apache pour écouter sur le port 80
+# Configurer Apache pour écouter sur le port 80 par défaut
+# Le port sera ajusté dynamiquement dans docker-entrypoint.sh si $PORT est défini
 RUN echo "Listen 80" > /etc/apache2/ports.conf
 
 # Script de démarrage
