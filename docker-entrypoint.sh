@@ -291,6 +291,25 @@ if [ "$APP_ENV" = "production" ] || [ -n "$DB_HOST" ]; then
     fi
 fi
 
+# Configurer Apache pour utiliser le port Railway ($PORT) ou 80 par défaut
+RAILWAY_PORT=${PORT:-80}
+echo "=== Configuration du port Apache ==="
+echo "Port Railway (PORT): ${PORT:-non défini}"
+echo "Port Apache: $RAILWAY_PORT"
+
+# Modifier la configuration Apache pour utiliser le port Railway
+if [ -n "$PORT" ] && [ "$PORT" != "80" ]; then
+    echo "Configuration Apache pour le port $PORT (Railway)"
+    # Modifier ports.conf
+    echo "Listen $PORT" > /etc/apache2/ports.conf
+    # Modifier la configuration du VirtualHost
+    sed -i "s/<VirtualHost \*:80>/<VirtualHost *:$PORT>/" /etc/apache2/sites-available/000-default.conf || true
+    echo "Apache configuré pour écouter sur le port $PORT"
+else
+    echo "Apache configuré pour écouter sur le port 80 (défaut)"
+fi
+
 # Démarrer Apache
+echo "=== Démarrage d'Apache ==="
 exec apache2-foreground
 
