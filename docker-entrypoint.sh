@@ -303,13 +303,39 @@ if [ -n "$PORT" ] && [ "$PORT" != "80" ]; then
     # Modifier ports.conf
     echo "Listen $PORT" > /etc/apache2/ports.conf
     # Modifier la configuration du VirtualHost
-    sed -i "s/<VirtualHost \*:80>/<VirtualHost *:$PORT>/" /etc/apache2/sites-available/000-default.conf || true
-    echo "Apache configuré pour écouter sur le port $PORT"
+    if grep -q "<VirtualHost \*:80>" /etc/apache2/sites-available/000-default.conf; then
+        sed -i "s/<VirtualHost \*:80>/<VirtualHost *:$PORT>/" /etc/apache2/sites-available/000-default.conf
+    elif grep -q "<VirtualHost \*:8080>" /etc/apache2/sites-available/000-default.conf; then
+        sed -i "s/<VirtualHost \*:8080>/<VirtualHost *:$PORT>/" /etc/apache2/sites-available/000-default.conf
+    else
+        # Créer une nouvelle configuration si nécessaire
+        cat > /etc/apache2/sites-available/000-default.conf <<EOF
+<VirtualHost *:$PORT>
+    ServerName localhost
+    DocumentRoot /var/www/html/public
+
+    <Directory /var/www/html/public>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog \${APACHE_LOG_DIR}/error.log
+    CustomLog \${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+EOF
+    fi
+    echo "✅ Apache configuré pour écouter sur le port $PORT"
 else
     echo "Apache configuré pour écouter sur le port 80 (défaut)"
 fi
 
+# Vérifier que la configuration Apache est valide
+echo "=== Vérification de la configuration Apache ==="
+apache2ctl configtest 2>&1 | head -10 || echo "Note: configtest peut échouer, mais on continue"
+
 # Démarrer Apache
 echo "=== Démarrage d'Apache ==="
+echo "Apache va démarrer et écouter sur le port ${PORT:-80}"
 exec apache2-foreground
 
