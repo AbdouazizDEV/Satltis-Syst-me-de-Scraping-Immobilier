@@ -129,7 +129,20 @@ chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache |
 chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache || true
 
 # Exécuter les migrations (seulement si pas déjà fait)
-php artisan migrate --force || true
+echo "=== Exécution des migrations ==="
+php artisan migrate --force
+if [ $? -eq 0 ]; then
+    echo "✅ Migrations exécutées avec succès"
+else
+    echo "❌ ERREUR lors de l'exécution des migrations"
+    echo "Vérification de la connexion à la base de données..."
+    php artisan db:show 2>&1 || echo "Impossible de se connecter à la base de données"
+    exit 1
+fi
+
+# Vérifier que la table sessions existe
+echo "=== Vérification de la table sessions ==="
+php artisan tinker --execute="echo Schema::hasTable('sessions') ? '✅ Table sessions existe' : '❌ Table sessions manquante';" 2>/dev/null || echo "Note: Impossible de vérifier via tinker"
 
 # Optimiser l'application pour la production
 if [ "$APP_ENV" = "production" ] || [ -n "$DB_HOST" ]; then
