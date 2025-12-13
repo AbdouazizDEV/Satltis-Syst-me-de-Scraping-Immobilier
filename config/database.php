@@ -16,14 +16,16 @@ return [
     |
     */
 
-    // En développement local (APP_ENV=local), utiliser SQLite par défaut
-    // En production, utiliser PostgreSQL si DB_HOST est défini
-    // Sinon, utiliser DB_CONNECTION s'il est défini, ou SQLite par défaut
-    'default' => env('DB_CONNECTION') ?: (
-        (env('APP_ENV') === 'local') 
-            ? 'sqlite' 
-            : ((env('APP_ENV') === 'production' && env('DB_HOST')) ? 'pgsql' : 'sqlite')
-    ),
+    // Logique de détection automatique :
+    // 1. Si DB_HOST est défini → PostgreSQL (production Render/Neon)
+    // 2. Si DB_CONNECTION est explicitement défini → utiliser cette valeur
+    // 3. Si APP_ENV=local → SQLite (développement local)
+    // 4. Sinon → SQLite par défaut
+    'default' => env('DB_HOST') 
+        ? 'pgsql'  // Forcer PostgreSQL si DB_HOST est défini (production)
+        : (env('DB_CONNECTION') ?: (
+            (env('APP_ENV') === 'local') ? 'sqlite' : 'sqlite'
+        )),
 
     /*
     |--------------------------------------------------------------------------
