@@ -20,9 +20,18 @@ Railway détectera automatiquement :
 - Le `Dockerfile` (pour le build)
 - Le `railway.json` (pour la configuration)
 
-### 3. Configurer les variables d'environnement
+### 3. Configurer les variables d'environnement ⚠️ IMPORTANT
 
-Dans l'onglet **Variables** de votre service Railway, ajoutez :
+**C'est l'étape la plus importante !** Sans ces variables, l'application utilisera SQLite au lieu de PostgreSQL.
+
+Dans l'onglet **Variables** de votre service Railway :
+
+1. Cliquez sur "New Variable"
+2. Ajoutez les variables une par une (voir ci-dessous)
+3. Cliquez sur "Add" après chaque variable
+4. **Sauvegardez** les changements
+
+**Railway redéploiera automatiquement** après avoir ajouté les variables.
 
 #### Option 1 : Utiliser DB_URL (Recommandé)
 

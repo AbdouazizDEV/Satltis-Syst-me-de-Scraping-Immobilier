@@ -20,6 +20,9 @@ RUN apt-get update && apt-get install -y \
 # Installer Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Désactiver les MPMs non utilisés pour éviter l'erreur "More than one MPM loaded"
+RUN a2dismod mpm_event mpm_worker 2>/dev/null || true
+
 # Activer le module rewrite d'Apache
 RUN a2enmod rewrite
 
