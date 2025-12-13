@@ -17,12 +17,13 @@ return [
     */
 
     // Logique de détection automatique :
-    // 1. Si DB_HOST est défini → PostgreSQL (production Render/Neon)
-    // 2. Si DB_CONNECTION est explicitement défini → utiliser cette valeur
-    // 3. Si APP_ENV=local → SQLite (développement local)
-    // 4. Sinon → SQLite par défaut
-    'default' => env('DB_HOST') 
-        ? 'pgsql'  // Forcer PostgreSQL si DB_HOST est défini (production)
+    // 1. Si DB_URL est défini → PostgreSQL (production avec URL complète)
+    // 2. Si DB_HOST est défini → PostgreSQL (production Render/Neon)
+    // 3. Si DB_CONNECTION est explicitement défini → utiliser cette valeur
+    // 4. Si APP_ENV=local → SQLite (développement local)
+    // 5. Sinon → SQLite par défaut
+    'default' => (env('DB_URL') || env('DB_HOST')) 
+        ? 'pgsql'  // Forcer PostgreSQL si DB_URL ou DB_HOST est défini (production)
         : (env('DB_CONNECTION') ?: (
             (env('APP_ENV') === 'local') ? 'sqlite' : 'sqlite'
         )),

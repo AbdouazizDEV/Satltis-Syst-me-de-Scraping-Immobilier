@@ -31,32 +31,55 @@ fi
 
 # Forcer PostgreSQL si DB_HOST est défini (production Render/Neon)
 # IMPORTANT: Configurer PostgreSQL AVANT de créer le cache
-if [ -n "$DB_HOST" ]; then
-    echo "=== Configuration PostgreSQL détectée (DB_HOST=$DB_HOST) ==="
-    
-    # Exporter les variables d'environnement pour qu'elles soient disponibles pour PHP
-    export DB_CONNECTION=pgsql
-    export DB_HOST="$DB_HOST"
-    [ -n "$DB_DATABASE" ] && export DB_DATABASE="$DB_DATABASE"
-    [ -n "$DB_USERNAME" ] && export DB_USERNAME="$DB_USERNAME"
-    [ -n "$DB_PASSWORD" ] && export DB_PASSWORD="$DB_PASSWORD"
-    [ -n "$DB_PORT" ] && export DB_PORT="$DB_PORT"
-    [ -n "$DB_SSLMODE" ] && export DB_SSLMODE="$DB_SSLMODE"
-    
-    # Forcer PostgreSQL dans .env (CRITIQUE: avant de créer le cache)
-    if grep -q "DB_CONNECTION=" .env 2>/dev/null; then
-        sed -i 's/DB_CONNECTION=.*/DB_CONNECTION=pgsql/' .env
+# Vérifier DB_URL d'abord (prioritaire), puis DB_HOST
+if [ -n "$DB_URL" ] || [ -n "$DB_HOST" ]; then
+    if [ -n "$DB_URL" ]; then
+        echo "=== Configuration PostgreSQL détectée via DB_URL ==="
+        export DB_CONNECTION=pgsql
+        export DB_URL="$DB_URL"
+        
+        # Forcer PostgreSQL dans .env (CRITIQUE: avant de créer le cache)
+        if grep -q "DB_CONNECTION=" .env 2>/dev/null; then
+            sed -i 's/DB_CONNECTION=.*/DB_CONNECTION=pgsql/' .env
+        else
+            echo "DB_CONNECTION=pgsql" >> .env
+        fi
+        
+        # Ajouter DB_URL dans .env
+        if grep -q "DB_URL=" .env 2>/dev/null; then
+            sed -i "s|DB_URL=.*|DB_URL=$DB_URL|" .env
+        else
+            echo "DB_URL=$DB_URL" >> .env
+        fi
+        
+        echo "DB_URL configuré dans .env"
     else
-        echo "DB_CONNECTION=pgsql" >> .env
+        echo "=== Configuration PostgreSQL détectée (DB_HOST=$DB_HOST) ==="
+        
+        # Exporter les variables d'environnement pour qu'elles soient disponibles pour PHP
+        export DB_CONNECTION=pgsql
+        export DB_HOST="$DB_HOST"
+        [ -n "$DB_DATABASE" ] && export DB_DATABASE="$DB_DATABASE"
+        [ -n "$DB_USERNAME" ] && export DB_USERNAME="$DB_USERNAME"
+        [ -n "$DB_PASSWORD" ] && export DB_PASSWORD="$DB_PASSWORD"
+        [ -n "$DB_PORT" ] && export DB_PORT="$DB_PORT"
+        [ -n "$DB_SSLMODE" ] && export DB_SSLMODE="$DB_SSLMODE"
+        
+        # Forcer PostgreSQL dans .env (CRITIQUE: avant de créer le cache)
+        if grep -q "DB_CONNECTION=" .env 2>/dev/null; then
+            sed -i 's/DB_CONNECTION=.*/DB_CONNECTION=pgsql/' .env
+        else
+            echo "DB_CONNECTION=pgsql" >> .env
+        fi
+        
+        # S'assurer que les variables PostgreSQL sont définies dans .env
+        [ -n "$DB_HOST" ] && (grep -q "DB_HOST=" .env && sed -i "s|DB_HOST=.*|DB_HOST=$DB_HOST|" .env || echo "DB_HOST=$DB_HOST" >> .env)
+        [ -n "$DB_DATABASE" ] && (grep -q "DB_DATABASE=" .env && sed -i "s|DB_DATABASE=.*|DB_DATABASE=$DB_DATABASE|" .env || echo "DB_DATABASE=$DB_DATABASE" >> .env)
+        [ -n "$DB_USERNAME" ] && (grep -q "DB_USERNAME=" .env && sed -i "s|DB_USERNAME=.*|DB_USERNAME=$DB_USERNAME|" .env || echo "DB_USERNAME=$DB_USERNAME" >> .env)
+        [ -n "$DB_PASSWORD" ] && (grep -q "DB_PASSWORD=" .env && sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=$DB_PASSWORD|" .env || echo "DB_PASSWORD=$DB_PASSWORD" >> .env)
+        [ -n "$DB_PORT" ] && (grep -q "DB_PORT=" .env && sed -i "s|DB_PORT=.*|DB_PORT=$DB_PORT|" .env || echo "DB_PORT=$DB_PORT" >> .env)
+        [ -n "$DB_SSLMODE" ] && (grep -q "DB_SSLMODE=" .env && sed -i "s|DB_SSLMODE=.*|DB_SSLMODE=$DB_SSLMODE|" .env || echo "DB_SSLMODE=$DB_SSLMODE" >> .env)
     fi
-    
-    # S'assurer que les variables PostgreSQL sont définies dans .env
-    [ -n "$DB_HOST" ] && (grep -q "DB_HOST=" .env && sed -i "s|DB_HOST=.*|DB_HOST=$DB_HOST|" .env || echo "DB_HOST=$DB_HOST" >> .env)
-    [ -n "$DB_DATABASE" ] && (grep -q "DB_DATABASE=" .env && sed -i "s|DB_DATABASE=.*|DB_DATABASE=$DB_DATABASE|" .env || echo "DB_DATABASE=$DB_DATABASE" >> .env)
-    [ -n "$DB_USERNAME" ] && (grep -q "DB_USERNAME=" .env && sed -i "s|DB_USERNAME=.*|DB_USERNAME=$DB_USERNAME|" .env || echo "DB_USERNAME=$DB_USERNAME" >> .env)
-    [ -n "$DB_PASSWORD" ] && (grep -q "DB_PASSWORD=" .env && sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=$DB_PASSWORD|" .env || echo "DB_PASSWORD=$DB_PASSWORD" >> .env)
-    [ -n "$DB_PORT" ] && (grep -q "DB_PORT=" .env && sed -i "s|DB_PORT=.*|DB_PORT=$DB_PORT|" .env || echo "DB_PORT=$DB_PORT" >> .env)
-    [ -n "$DB_SSLMODE" ] && (grep -q "DB_SSLMODE=" .env && sed -i "s|DB_SSLMODE=.*|DB_SSLMODE=$DB_SSLMODE|" .env || echo "DB_SSLMODE=$DB_SSLMODE" >> .env)
     
     # Forcer APP_ENV=production si pas défini
     if ! grep -q "APP_ENV=" .env 2>/dev/null; then
