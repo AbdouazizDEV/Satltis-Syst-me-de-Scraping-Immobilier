@@ -177,20 +177,25 @@ docker run -p 8000:80 satltis-app
 ## 🚢 Déploiement
 
 Le projet est prêt pour déploiement sur :
-- **Render** : Utilise Docker (voir `render.yaml`)
-- **Railway** : Utilise le `Procfile` ou Docker
-- **Heroku** : Utilise le `Procfile`
+- **Render** : ✅ Recommandé - Utilise Docker (voir `render.yaml`)
+- **Railway** : ✅ Supporté - Utilise le `railway.json` ou Docker
+- **Heroku** : ✅ Supporté - Utilise le `Procfile`
 
-### Déploiement sur Render avec Docker
+### ⚠️ Plateformes NON supportées
+
+- **Netlify** : ❌ Ne supporte pas PHP/Laravel (conçu uniquement pour les sites statiques)
+  - Voir `NETLIFY_NOTE.md` pour plus de détails
+
+### Déploiement sur Render avec Docker (Recommandé)
 
 1. Connectez votre repo GitHub à Render
 2. Créez un nouveau "Web Service"
 3. Sélectionnez votre repo
 4. Render détectera automatiquement le `Dockerfile`
-5. Ajoutez une base de données PostgreSQL
-6. Configurez les variables d'environnement
+5. Les variables d'environnement sont déjà définies dans `render.yaml`
+6. La base de données PostgreSQL (Neon) est déjà configurée
 
-Voir `DEPLOYMENT.md` pour les détails.
+**Note** : Le projet utilise Neon PostgreSQL. Les variables d'environnement sont définies dans `render.yaml`.
 
 ## 📄 Licence
 
