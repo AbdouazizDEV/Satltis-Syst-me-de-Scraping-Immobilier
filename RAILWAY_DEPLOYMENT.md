@@ -20,6 +20,18 @@ Railway détectera automatiquement :
 - Le `Dockerfile` (pour le build)
 - Le `railway.json` (pour la configuration)
 
+### 2.5. Exposer le service (OBLIGATOIRE pour obtenir une URL)
+
+Par défaut, Railway ne génère pas d'URL publique. Pour obtenir une URL :
+
+1. Dans votre service Railway, allez dans l'onglet **Settings**
+2. Scrollez jusqu'à la section **Networking**
+3. Cliquez sur **"Generate Domain"** ou **"Public Networking"**
+4. Railway générera automatiquement une URL comme : `votre-service.up.railway.app`
+5. Vous pouvez aussi utiliser un domaine personnalisé si vous en avez un
+
+**Note** : Sans exposer le service, vous verrez "Unexposed service" et l'application ne sera pas accessible publiquement.
+
 ### 3. Configurer les variables d'environnement ⚠️ IMPORTANT
 
 **C'est l'étape la plus importante !** Sans ces variables, l'application utilisera SQLite au lieu de PostgreSQL.
@@ -121,13 +133,25 @@ Dans l'onglet **Logs** de Railway, vous devriez voir :
 ✅ Migrations exécutées avec succès
 ```
 
-### 2. Vérifier l'URL
+### 2. Exposer le service pour obtenir une URL
 
-Railway générera automatiquement une URL pour votre service (ex: `votre-app.up.railway.app`)
+**⚠️ IMPORTANT** : Par défaut, Railway ne génère pas d'URL publique.
+
+Pour obtenir une URL :
+
+1. Allez dans l'onglet **Settings** de votre service
+2. Scrollez jusqu'à la section **Networking** ou **Public Networking**
+3. Cliquez sur **"Generate Domain"** ou activez **"Public Networking"**
+4. Railway générera une URL comme : `satltis-syst-me-de-scraping-immobilier.up.railway.app`
+5. L'URL sera visible dans l'onglet **Settings** → **Networking**
+
+**Alternative** : Dans l'onglet **Deployments**, vous verrez "Unexposed service". Cliquez sur l'icône d'œil barré pour exposer le service.
 
 ### 3. Tester l'application
 
-Accédez à : `https://votre-app.up.railway.app/rentals`
+Une fois le service exposé, accédez à :
+- **Page principale** : `https://votre-url.up.railway.app`
+- **Page des locations** : `https://votre-url.up.railway.app/rentals`
 
 ## Problèmes courants
 
