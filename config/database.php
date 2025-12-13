@@ -16,8 +16,14 @@ return [
     |
     */
 
-    // Détecter automatiquement PostgreSQL si DB_HOST est défini (production)
-    'default' => env('DB_HOST') ? (env('DB_CONNECTION', 'pgsql')) : env('DB_CONNECTION', 'sqlite'),
+    // En développement local (APP_ENV=local), utiliser SQLite par défaut
+    // En production, utiliser PostgreSQL si DB_HOST est défini
+    // Sinon, utiliser DB_CONNECTION s'il est défini, ou SQLite par défaut
+    'default' => env('DB_CONNECTION') ?: (
+        (env('APP_ENV') === 'local') 
+            ? 'sqlite' 
+            : ((env('APP_ENV') === 'production' && env('DB_HOST')) ? 'pgsql' : 'sqlite')
+    ),
 
     /*
     |--------------------------------------------------------------------------

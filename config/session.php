@@ -74,7 +74,11 @@ return [
     */
 
     // Utiliser la même connexion que la base de données par défaut
-    'connection' => env('SESSION_CONNECTION', env('DB_HOST') ? (env('DB_CONNECTION', 'pgsql')) : env('DB_CONNECTION', 'sqlite')),
+    'connection' => env('SESSION_CONNECTION', env('DB_CONNECTION') ?: (
+        (env('APP_ENV') === 'local') 
+            ? 'sqlite' 
+            : ((env('APP_ENV') === 'production' && env('DB_HOST')) ? 'pgsql' : 'sqlite')
+    )),
 
     /*
     |--------------------------------------------------------------------------
