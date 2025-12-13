@@ -151,24 +151,44 @@ else
     # Les tables peuvent déjà exister
 fi
 
-# Vérifier que la table sessions existe, sinon la créer
-echo "=== Vérification de la table sessions ==="
+# Vérifier que les tables essentielles existent
+echo "=== Vérification des tables essentielles ==="
 php artisan tinker --execute="
-if (!Schema::hasTable('sessions')) {
-    echo '❌ Table sessions manquante, création en cours...';
-    Schema::create('sessions', function (\$table) {
-        \$table->string('id')->primary();
-        \$table->foreignId('user_id')->nullable()->index();
-        \$table->string('ip_address', 45)->nullable();
-        \$table->text('user_agent')->nullable();
-        \$table->longText('payload');
-        \$table->integer('last_activity')->index();
-    });
-    echo '✅ Table sessions créée';
-} else {
-    echo '✅ Table sessions existe';
+use Illuminate\Support\Facades\Schema;
+\$tables = ['users', 'sessions', 'cache', 'migrations'];
+foreach (\$tables as \$table) {
+    if (Schema::hasTable(\$table)) {
+        echo \"✅ Table \$table existe\";
+    } else {
+        echo \"❌ Table \$table manquante\";
+    }
 }
-" 2>/dev/null || echo "Note: Impossible de vérifier/créer via tinker, les migrations devraient l'avoir créée"
+" 2>/dev/null || echo "Note: Impossible de vérifier via tinker"
+
+# Si la table sessions n'existe pas, la créer manuellement
+echo "=== Vérification/création de la table sessions ==="
+php artisan tinker --execute="
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+if (!Schema::hasTable('sessions')) {
+    echo 'Création de la table sessions...';
+    try {
+        Schema::create('sessions', function (Blueprint \$table) {
+            \$table->string('id')->primary();
+            \$table->foreignId('user_id')->nullable()->index();
+            \$table->string('ip_address', 45)->nullable();
+            \$table->text('user_agent')->nullable();
+            \$table->longText('payload');
+            \$table->integer('last_activity')->index();
+        });
+        echo '✅ Table sessions créée';
+    } catch (Exception \$e) {
+        echo '❌ Erreur lors de la création: ' . \$e->getMessage();
+    }
+} else {
+    echo '✅ Table sessions existe déjà';
+}
+" 2>/dev/null || echo "Note: Impossible de créer via tinker"
 
 # Optimiser l'application pour la production
 if [ "$APP_ENV" = "production" ] || [ -n "$DB_HOST" ]; then
