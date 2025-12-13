@@ -32,6 +32,13 @@ fi
 # Forcer PostgreSQL si DB_HOST est défini (production Render/Neon)
 # IMPORTANT: Configurer PostgreSQL AVANT de créer le cache
 # Vérifier DB_URL d'abord (prioritaire), puis DB_HOST
+echo "=== Vérification des variables d'environnement ==="
+echo "DB_URL: ${DB_URL:-non défini}"
+echo "DB_HOST: ${DB_HOST:-non défini}"
+echo "DB_CONNECTION: ${DB_CONNECTION:-non défini}"
+echo "APP_ENV: ${APP_ENV:-non défini}"
+
+# Vérifier DB_URL d'abord (prioritaire), puis DB_HOST
 if [ -n "$DB_URL" ] || [ -n "$DB_HOST" ]; then
     if [ -n "$DB_URL" ]; then
         echo "=== Configuration PostgreSQL détectée via DB_URL ==="
@@ -98,7 +105,10 @@ if [ -n "$DB_URL" ] || [ -n "$DB_HOST" ]; then
     echo "=== Vérification du fichier .env ==="
     grep -E "^(DB_CONNECTION|DB_HOST|APP_ENV)=" .env || echo "ERREUR: Variables non trouvées dans .env"
 else
-    echo "Aucune configuration PostgreSQL détectée, utilisation de SQLite par défaut"
+    echo "⚠️ ATTENTION: Aucune configuration PostgreSQL détectée !"
+    echo "DB_URL et DB_HOST sont tous les deux vides"
+    echo "L'application utilisera SQLite par défaut (peut causer des erreurs en production)"
+    echo "Vérifiez que les variables d'environnement sont bien définies dans Render"
 fi
 
 # Créer le fichier SQLite seulement si explicitement demandé (développement local)
@@ -150,7 +160,19 @@ if [ "$APP_ENV" = "production" ] || [ -n "$DB_HOST" ]; then
     
     # Vérifier quelle base de données est utilisée APRÈS création du cache
     echo "=== Vérification de la configuration de la base de données ==="
-    php artisan tinker --execute="echo 'DB_CONNECTION (env): ' . env('DB_CONNECTION', 'non défini') . PHP_EOL; echo 'DB_CONNECTION (config): ' . config('database.default') . PHP_EOL; echo 'DB_HOST: ' . env('DB_HOST', 'non défini') . PHP_EOL; echo 'APP_ENV: ' . env('APP_ENV', 'non défini') . PHP_EOL;" 2>/dev/null || echo "Note: Impossible de vérifier la config via tinker"
+    echo "Variables d'environnement disponibles :"
+    env | grep -E "^(DB_|APP_ENV)" || echo "Aucune variable DB_ ou APP_ENV trouvée"
+    
+    echo "Contenu du .env :"
+    grep -E "^(DB_CONNECTION|DB_URL|DB_HOST|APP_ENV)=" .env 2>/dev/null || echo "Variables non trouvées dans .env"
+    
+    php artisan tinker --execute="echo 'DB_URL (env): ' . (env('DB_URL') ? 'défini' : 'non défini') . PHP_EOL; echo 'DB_HOST (env): ' . (env('DB_HOST') ? 'défini' : 'non défini') . PHP_EOL; echo 'DB_CONNECTION (env): ' . env('DB_CONNECTION', 'non défini') . PHP_EOL; echo 'DB_CONNECTION (config): ' . config('database.default') . PHP_EOL; echo 'APP_ENV: ' . env('APP_ENV', 'non défini') . PHP_EOL;" 2>/dev/null || echo "Note: Impossible de vérifier la config via tinker"
+    
+    # Test de connexion PostgreSQL si disponible
+    if [ -n "$DB_URL" ] || [ -n "$DB_HOST" ]; then
+        echo "=== Test de connexion PostgreSQL ==="
+        php artisan db:show 2>&1 | head -10 || echo "Note: db:show peut échouer, mais la connexion sera testée lors des migrations"
+    fi
 fi
 
 # Démarrer Apache
