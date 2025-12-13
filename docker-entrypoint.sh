@@ -140,9 +140,24 @@ else
     exit 1
 fi
 
-# Vérifier que la table sessions existe
+# Vérifier que la table sessions existe, sinon la créer
 echo "=== Vérification de la table sessions ==="
-php artisan tinker --execute="echo Schema::hasTable('sessions') ? '✅ Table sessions existe' : '❌ Table sessions manquante';" 2>/dev/null || echo "Note: Impossible de vérifier via tinker"
+php artisan tinker --execute="
+if (!Schema::hasTable('sessions')) {
+    echo '❌ Table sessions manquante, création en cours...';
+    Schema::create('sessions', function (\$table) {
+        \$table->string('id')->primary();
+        \$table->foreignId('user_id')->nullable()->index();
+        \$table->string('ip_address', 45)->nullable();
+        \$table->text('user_agent')->nullable();
+        \$table->longText('payload');
+        \$table->integer('last_activity')->index();
+    });
+    echo '✅ Table sessions créée';
+} else {
+    echo '✅ Table sessions existe';
+}
+" 2>/dev/null || echo "Note: Impossible de vérifier/créer via tinker, les migrations devraient l'avoir créée"
 
 # Optimiser l'application pour la production
 if [ "$APP_ENV" = "production" ] || [ -n "$DB_HOST" ]; then
