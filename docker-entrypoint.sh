@@ -180,9 +180,15 @@ chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache || true
 # Exécuter les migrations (seulement si pas déjà fait)
 echo "=== Exécution des migrations ==="
 # Vérifier d'abord si la base de données est accessible
-php artisan db:show 2>&1 | head -5 || echo "Note: db:show peut échouer, mais on continue"
+echo "Vérification de la connexion à la base de données..."
+php artisan db:show 2>&1 | head -10 || echo "Note: db:show peut échouer, mais on continue"
+
+# Vérifier l'état des migrations avant d'exécuter
+echo "État actuel des migrations:"
+php artisan migrate:status 2>&1 | head -20 || echo "Note: migrate:status peut échouer si la table migrations n'existe pas"
 
 # Exécuter les migrations avec gestion d'erreur améliorée
+echo "Exécution des migrations..."
 php artisan migrate --force --no-interaction 2>&1
 MIGRATION_EXIT_CODE=$?
 
@@ -190,13 +196,15 @@ if [ $MIGRATION_EXIT_CODE -eq 0 ]; then
     echo "✅ Migrations exécutées avec succès"
 else
     echo "⚠️ ERREUR lors de l'exécution des migrations (code: $MIGRATION_EXIT_CODE)"
-    echo "Vérification de l'état des migrations..."
+    echo "Cela peut être normal si certaines tables existent déjà"
+    
+    # Vérifier l'état après l'erreur
+    echo "État des migrations après l'erreur:"
     php artisan migrate:status 2>&1 | head -20 || true
     
-    # Si c'est une erreur de transaction, essayer de réinitialiser
-    echo "Tentative de récupération..."
     # Ne pas exit 1 - laisser l'application démarrer même si certaines migrations ont échoué
-    # Les tables peuvent déjà exister
+    # Les tables peuvent déjà exister ou être partiellement créées
+    echo "Continuation malgré l'erreur de migration..."
 fi
 
 # Vérifier que les tables essentielles existent
