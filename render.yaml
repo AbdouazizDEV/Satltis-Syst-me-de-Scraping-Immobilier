@@ -14,8 +14,12 @@ services:
         value: error
       - key: DB_CONNECTION
         value: pgsql
+      # Format Prisma/standard (DATABASE_URL) - prioritaire
+      - key: DATABASE_URL
+        value: postgresql://neondb_owner:npg_zhybVqrFSt30@ep-patient-cell-ahrb8zvy-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+      # Format Laravel (DB_URL) - pour compatibilité
       - key: DB_URL
-        value: postgresql://neondb_owner:npg_zhybVqrFSt30@ep-patient-cell-ahrb8zvy-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require
+        value: postgresql://neondb_owner:npg_zhybVqrFSt30@ep-patient-cell-ahrb8zvy-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
       # Variables individuelles (optionnelles, DB_URL est prioritaire)
       - key: DB_HOST
         value: ep-patient-cell-ahrb8zvy-pooler.c-3.us-east-1.aws.neon.tech

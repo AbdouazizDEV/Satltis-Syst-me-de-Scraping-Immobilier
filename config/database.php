@@ -17,13 +17,14 @@ return [
     */
 
     // Logique de détection automatique :
-    // 1. Si DB_URL est défini → PostgreSQL (production avec URL complète)
-    // 2. Si DB_HOST est défini → PostgreSQL (production Render/Neon)
-    // 3. Si DB_CONNECTION est explicitement défini → utiliser cette valeur
-    // 4. Si APP_ENV=local → SQLite (développement local)
-    // 5. Sinon → SQLite par défaut
-    'default' => (env('DB_URL') || env('DB_HOST')) 
-        ? 'pgsql'  // Forcer PostgreSQL si DB_URL ou DB_HOST est défini (production)
+    // 1. Si DATABASE_URL est défini → PostgreSQL (production avec URL complète - format Prisma/standard)
+    // 2. Si DB_URL est défini → PostgreSQL (production avec URL complète - format Laravel)
+    // 3. Si DB_HOST est défini → PostgreSQL (production Render/Neon)
+    // 4. Si DB_CONNECTION est explicitement défini → utiliser cette valeur
+    // 5. Si APP_ENV=local → SQLite (développement local)
+    // 6. Sinon → SQLite par défaut
+    'default' => (env('DATABASE_URL') || env('DB_URL') || env('DB_HOST')) 
+        ? 'pgsql'  // Forcer PostgreSQL si DATABASE_URL, DB_URL ou DB_HOST est défini (production)
         : (env('DB_CONNECTION') ?: (
             (env('APP_ENV') === 'local') ? 'sqlite' : 'sqlite'
         )),
@@ -95,7 +96,8 @@ return [
 
         'pgsql' => [
             'driver' => 'pgsql',
-            'url' => env('DB_URL'),
+            // Support DATABASE_URL (format Prisma/standard) et DB_URL (format Laravel)
+            'url' => env('DATABASE_URL') ?: env('DB_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '5432'),
             'database' => env('DB_DATABASE', 'laravel'),

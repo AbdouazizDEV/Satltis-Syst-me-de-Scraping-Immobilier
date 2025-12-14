@@ -32,23 +32,35 @@ fi
 
 # Forcer PostgreSQL si DB_HOST est défini (production Render/Neon)
 # IMPORTANT: Configurer PostgreSQL AVANT de créer le cache
-# Vérifier DB_URL d'abord (prioritaire), puis DB_HOST
+# Vérifier DATABASE_URL (format Prisma/standard) d'abord, puis DB_URL, puis DB_HOST
 echo "=== Vérification des variables d'environnement ==="
+echo "DATABASE_URL: ${DATABASE_URL:-non défini}"
 echo "DB_URL: ${DB_URL:-non défini}"
 echo "DB_HOST: ${DB_HOST:-non défini}"
 echo "DB_CONNECTION: ${DB_CONNECTION:-non défini}"
 echo "APP_ENV: ${APP_ENV:-non défini}"
 
-# Vérifier DB_URL d'abord (prioritaire), puis DB_HOST
-if [ -n "$DB_URL" ] || [ -n "$DB_HOST" ]; then
-    if [ -n "$DB_URL" ]; then
+# Utiliser DATABASE_URL si défini, sinon DB_URL, sinon DB_HOST
+DB_CONNECTION_STRING="${DATABASE_URL:-${DB_URL:-}}"
+
+# Vérifier DATABASE_URL (format Prisma/standard) d'abord, puis DB_URL, puis DB_HOST
+if [ -n "$DATABASE_URL" ] || [ -n "$DB_URL" ] || [ -n "$DB_HOST" ]; then
+    if [ -n "$DATABASE_URL" ]; then
+        echo "=== Configuration PostgreSQL détectée via DATABASE_URL (format Prisma/standard) ==="
+        export DB_CONNECTION=pgsql
+        export DATABASE_URL="$DATABASE_URL"
+        # Laravel peut aussi utiliser DB_URL, donc on le définit aussi pour compatibilité
+        export DB_URL="$DATABASE_URL"
+        DB_CONNECTION_STRING="$DATABASE_URL"
+    elif [ -n "$DB_URL" ]; then
         echo "=== Configuration PostgreSQL détectée via DB_URL ==="
         export DB_CONNECTION=pgsql
         export DB_URL="$DB_URL"
+        DB_CONNECTION_STRING="$DB_URL"
         
-        # Extraire les informations de DB_URL et les mettre dans les variables individuelles
+        # Extraire les informations de la chaîne de connexion et les mettre dans les variables individuelles
         # Format: postgresql://username:password@host:port/database?sslmode=require
-        DB_URL_CLEAN=$(echo "$DB_URL" | sed 's|postgresql://||' | sed 's|postgres://||')
+        DB_URL_CLEAN=$(echo "$DB_CONNECTION_STRING" | sed 's|postgresql://||' | sed 's|postgres://||')
         DB_USER_PASS=$(echo "$DB_URL_CLEAN" | cut -d'@' -f1)
         DB_HOST_PORT_DB=$(echo "$DB_URL_CLEAN" | cut -d'@' -f2)
         
@@ -60,8 +72,8 @@ if [ -n "$DB_URL" ] || [ -n "$DB_HOST" ]; then
         DB_HOST=$(echo "$DB_HOST_PORT" | cut -d':' -f1)
         
         # Extraire sslmode si présent
-        if echo "$DB_URL" | grep -q "sslmode="; then
-            DB_SSLMODE=$(echo "$DB_URL" | sed 's/.*sslmode=\([^&]*\).*/\1/')
+        if echo "$DB_CONNECTION_STRING" | grep -q "sslmode="; then
+            DB_SSLMODE=$(echo "$DB_CONNECTION_STRING" | sed 's/.*sslmode=\([^&]*\).*/\1/')
         else
             DB_SSLMODE="require"
         fi
@@ -71,7 +83,7 @@ if [ -n "$DB_URL" ] || [ -n "$DB_HOST" ]; then
             DB_PORT="5432"
         fi
         
-        echo "Informations extraites de DB_URL:"
+        echo "Informations extraites de la chaîne de connexion:"
         echo "  DB_HOST: $DB_HOST"
         echo "  DB_PORT: $DB_PORT"
         echo "  DB_DATABASE: $DB_DATABASE"
@@ -93,11 +105,20 @@ if [ -n "$DB_URL" ] || [ -n "$DB_HOST" ]; then
             echo "DB_CONNECTION=pgsql" >> .env
         fi
         
-        # Ajouter DB_URL dans .env
+        # Ajouter DATABASE_URL dans .env (format Prisma/standard)
+        if [ -n "$DATABASE_URL" ]; then
+            if grep -q "DATABASE_URL=" .env 2>/dev/null; then
+                sed -i "s|DATABASE_URL=.*|DATABASE_URL=$DATABASE_URL|" .env
+            else
+                echo "DATABASE_URL=$DATABASE_URL" >> .env
+            fi
+        fi
+        
+        # Ajouter DB_URL dans .env (pour compatibilité Laravel)
         if grep -q "DB_URL=" .env 2>/dev/null; then
-            sed -i "s|DB_URL=.*|DB_URL=$DB_URL|" .env
+            sed -i "s|DB_URL=.*|DB_URL=$DB_CONNECTION_STRING|" .env
         else
-            echo "DB_URL=$DB_URL" >> .env
+            echo "DB_URL=$DB_CONNECTION_STRING" >> .env
         fi
         
         # Ajouter les variables individuelles dans .env (pour que Laravel les utilise)
@@ -108,7 +129,7 @@ if [ -n "$DB_URL" ] || [ -n "$DB_HOST" ]; then
         [ -n "$DB_PORT" ] && (grep -q "DB_PORT=" .env && sed -i "s|DB_PORT=.*|DB_PORT=$DB_PORT|" .env || echo "DB_PORT=$DB_PORT" >> .env)
         [ -n "$DB_SSLMODE" ] && (grep -q "DB_SSLMODE=" .env && sed -i "s|DB_SSLMODE=.*|DB_SSLMODE=$DB_SSLMODE|" .env || echo "DB_SSLMODE=$DB_SSLMODE" >> .env)
         
-        echo "DB_URL et variables individuelles configurées dans .env"
+        echo "DATABASE_URL/DB_URL et variables individuelles configurées dans .env"
     else
         echo "=== Configuration PostgreSQL détectée (DB_HOST=$DB_HOST) ==="
         
@@ -155,9 +176,9 @@ if [ -n "$DB_URL" ] || [ -n "$DB_HOST" ]; then
     grep -E "^(DB_CONNECTION|DB_HOST|APP_ENV)=" .env || echo "ERREUR: Variables non trouvées dans .env"
 else
     echo "⚠️ ATTENTION: Aucune configuration PostgreSQL détectée !"
-    echo "DB_URL et DB_HOST sont tous les deux vides"
+    echo "DATABASE_URL, DB_URL et DB_HOST sont tous vides"
     echo "L'application utilisera SQLite par défaut (peut causer des erreurs en production)"
-    echo "Vérifiez que les variables d'environnement sont bien définies dans Render"
+    echo "Vérifiez que les variables d'environnement sont bien définies dans Render/Railway"
 fi
 
 # Créer le fichier SQLite seulement si explicitement demandé (développement local)
@@ -282,10 +303,10 @@ if [ "$APP_ENV" = "production" ] || [ -n "$DB_HOST" ]; then
     echo "Contenu du .env :"
     grep -E "^(DB_CONNECTION|DB_URL|DB_HOST|APP_ENV)=" .env 2>/dev/null || echo "Variables non trouvées dans .env"
     
-    php artisan tinker --execute="echo 'DB_URL (env): ' . (env('DB_URL') ? 'défini' : 'non défini') . PHP_EOL; echo 'DB_HOST (env): ' . (env('DB_HOST') ? 'défini' : 'non défini') . PHP_EOL; echo 'DB_CONNECTION (env): ' . env('DB_CONNECTION', 'non défini') . PHP_EOL; echo 'DB_CONNECTION (config): ' . config('database.default') . PHP_EOL; echo 'APP_ENV: ' . env('APP_ENV', 'non défini') . PHP_EOL;" 2>/dev/null || echo "Note: Impossible de vérifier la config via tinker"
+    php artisan tinker --execute="echo 'DATABASE_URL (env): ' . (env('DATABASE_URL') ? 'défini' : 'non défini') . PHP_EOL; echo 'DB_URL (env): ' . (env('DB_URL') ? 'défini' : 'non défini') . PHP_EOL; echo 'DB_HOST (env): ' . (env('DB_HOST') ? 'défini' : 'non défini') . PHP_EOL; echo 'DB_CONNECTION (env): ' . env('DB_CONNECTION', 'non défini') . PHP_EOL; echo 'DB_CONNECTION (config): ' . config('database.default') . PHP_EOL; echo 'APP_ENV: ' . env('APP_ENV', 'non défini') . PHP_EOL;" 2>/dev/null || echo "Note: Impossible de vérifier la config via tinker"
     
     # Test de connexion PostgreSQL si disponible
-    if [ -n "$DB_URL" ] || [ -n "$DB_HOST" ]; then
+    if [ -n "$DATABASE_URL" ] || [ -n "$DB_URL" ] || [ -n "$DB_HOST" ]; then
         echo "=== Test de connexion PostgreSQL ==="
         php artisan db:show 2>&1 | head -10 || echo "Note: db:show peut échouer, mais la connexion sera testée lors des migrations"
     fi
