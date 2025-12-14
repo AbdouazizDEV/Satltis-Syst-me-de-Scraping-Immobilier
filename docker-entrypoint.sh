@@ -301,7 +301,7 @@ if [ "$APP_ENV" = "production" ] || [ -n "$DB_HOST" ]; then
     env | grep -E "^(DB_|APP_ENV)" || echo "Aucune variable DB_ ou APP_ENV trouvée"
     
     echo "Contenu du .env :"
-    grep -E "^(DB_CONNECTION|DB_URL|DB_HOST|APP_ENV)=" .env 2>/dev/null || echo "Variables non trouvées dans .env"
+    grep -E "^(DB_CONNECTION|DATABASE_URL|DB_URL|DB_HOST|APP_ENV)=" .env 2>/dev/null || echo "Variables non trouvées dans .env"
     
     php artisan tinker --execute="echo 'DATABASE_URL (env): ' . (env('DATABASE_URL') ? 'défini' : 'non défini') . PHP_EOL; echo 'DB_URL (env): ' . (env('DB_URL') ? 'défini' : 'non défini') . PHP_EOL; echo 'DB_HOST (env): ' . (env('DB_HOST') ? 'défini' : 'non défini') . PHP_EOL; echo 'DB_CONNECTION (env): ' . env('DB_CONNECTION', 'non défini') . PHP_EOL; echo 'DB_CONNECTION (config): ' . config('database.default') . PHP_EOL; echo 'APP_ENV: ' . env('APP_ENV', 'non défini') . PHP_EOL;" 2>/dev/null || echo "Note: Impossible de vérifier la config via tinker"
     
