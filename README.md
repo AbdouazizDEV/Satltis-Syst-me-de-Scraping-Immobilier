@@ -2,6 +2,31 @@
 
 Système backend Laravel pour scanner le web et extraire des données immobilières depuis différents sites d'annonces.
 
+## 📚 Choix de la Librairie de Scraping
+
+Le projet utilise **Symfony DomCrawler** combiné avec **Laravel HTTP Client** pour le scraping web.
+
+### Pourquoi ce choix ?
+
+1. **Symfony DomCrawler** :
+   - ✅ Intégré nativement dans Laravel (pas de dépendance supplémentaire)
+   - ✅ API simple et intuitive pour parser le HTML
+   - ✅ Support des sélecteurs CSS et XPath
+   - ✅ Gestion robuste des erreurs et du HTML malformé
+   - ✅ Performant et léger
+
+2. **Laravel HTTP Client** :
+   - ✅ Intégré dans Laravel (basé sur Guzzle)
+   - ✅ Gestion automatique des timeouts et retry
+   - ✅ Support natif des headers personnalisés (User-Agent, etc.)
+   - ✅ Facile à tester et à mocker
+
+3. **Alternative considérée : Goutte**
+   - ❌ Incompatible avec Laravel 11/12
+   - ❌ Dépendances supplémentaires non nécessaires
+
+Cette combinaison offre un excellent équilibre entre simplicité, performance et maintenabilité, tout en respectant les standards Laravel.
+
 ## 🚀 Installation Rapide
 
 ### Prérequis
