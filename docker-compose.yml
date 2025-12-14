@@ -12,7 +12,8 @@ services:
     environment:
       - APP_ENV=local
       - APP_DEBUG=true
-      - DB_CONNECTION=sqlite
+      - DATABASE_URL=postgresql://neondb_owner:npg_zhybVqrFSt30@ep-patient-cell-ahrb8zvy-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+      - DB_CONNECTION=pgsql
     volumes:
       - ./storage:/var/www/html/storage
       - ./database:/var/www/html/database
